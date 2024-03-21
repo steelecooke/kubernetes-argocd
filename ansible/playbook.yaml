@@ -1,0 +1,7 @@
+---
+- name: Install and configure ArgoCD
+  hosts: kubernetes_jbx
+  become: yes
+  remote_user: cloud-user
+  roles:
+    - argocd

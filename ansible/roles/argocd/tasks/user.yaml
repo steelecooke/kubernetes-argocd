@@ -1,0 +1,23 @@
+---
+- run_once: yes
+  block:
+    - name: ARGOCD USERS | Ensure service is up and running
+      wait_for:
+        host: "{{ ansible_host }}"
+        port: "{{ argocd_networking_port }}"
+        delay: 2
+
+    - name: ARGOCD USERS | Retrieve ArgoCD admin password from AWS Secrets Manager
+      ansible.builtin.set_fact:
+        argocd_users_admin_pwd_new: "{{ lookup('amazon.aws.aws_secret', var.argocd_users_admin_remote_name, region=var.argocd_aws_region:) }}"
+
+    - name: ARGOCD USERS | Get current Admin user credential
+      shell: kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
+      register: argocd_users_admin_pwd_initial
+
+    - name: ARGOCD USERS | Log into ARGOCD with CLI
+      shell: argocd login {{ ansible_host }}:{{ argocd_networking_port }} --username {{ argocd_users_admin_username }} --password {{ argocd_users_admin_pwd_initial }} --insecure
+
+    - name: ARGOCD USERS | Update ArgoCD Admin password
+      shell: argocd account update-password --current-password {{ argocd_users_admin_pwd_initial }} --new-password {{ argocd_users_admin_pwd_new }} --insecure
+      run_once: yes

@@ -1,0 +1,21 @@
+---
+- name: ARGOCD REPOSITORIES | Log into ARGOCD with CLI
+  shell: argocd login {{ ansible_host }}:{{ argocd_networking_port }} --username {{ argocd_users_admin_username }} --password {{ argocd_users_admin_pwd_new }} --insecure
+
+- name: ARGOCD REPOSITORIES | Get list of existing repositories in ArgoCD
+  shell: argocd repo list -o json
+  register: repo_list_json
+
+- name: ARGOCD REPOSITORIES | Parse JSON output to get repository URLs
+  set_fact:
+    existing_repo_urls: "{{ repo_list_json.stdout | from_json | map(attribute='repo') | list }}"
+
+- name: ARGOCD REPOSITORIES | Add Git HTTP repositories to ArgoCD
+  shell: argocd repo add {{ item.url }}
+  loop: "{{ argocd_repositories.githttp }}"
+  when: item.url not in existing_repo_urls and argocd_repositories.githttp is defined and argocd_repositories.githttp | length > 0
+
+- name: ARGOCD REPOSITORIES | Add Helm repositories to ArgoCD
+  shell: argocd repo add {{ item.url }} --type helm --name {{ item.name }}
+  loop: "{{ argocd_repositories.helm }}"
+  when: item.url not in existing_repo_urls and argocd_repositories.helm is defined and argocd_repositories.helm | length > 0
