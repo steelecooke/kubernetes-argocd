@@ -9,15 +9,26 @@
 
     - name: ARGOCD USERS | Retrieve ArgoCD admin password from AWS Secrets Manager
       ansible.builtin.set_fact:
-        argocd_users_admin_pwd_new: "{{ lookup('amazon.aws.aws_secret', var.argocd_users_admin_remote_name, region=var.argocd_aws_region:) }}"
+        argocd_users_admin_pwd_new_raw: "{{ lookup('amazon.aws.aws_secret', argocd_users_admin_remote_name, region=argocd_aws_region) }}"
+
+    - name: ARGOCD USERS | Set the ArgoCD admin password from the retrieved secret
+      ansible.builtin.set_fact:
+        argocd_users_admin_pwd_new: "{{ argocd_users_admin_pwd_new_raw['argocd_users_admin_pwd_new'] }}"
 
     - name: ARGOCD USERS | Get current Admin user credential
       shell: kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
       register: argocd_users_admin_pwd_initial
 
-    - name: ARGOCD USERS | Log into ARGOCD with CLI
-      shell: argocd login {{ ansible_host }}:{{ argocd_networking_port }} --username {{ argocd_users_admin_username }} --password {{ argocd_users_admin_pwd_initial }} --insecure
+    - name: ARGOCD USERS | Try logging into ARGOCD with the new password
+      shell: argocd login {{ ansible_host }}:{{ argocd_networking_port }} --username {{ argocd_users_admin_username }} --password {{ argocd_users_admin_pwd_new }} --insecure
+      register: login_with_new_password
+      ignore_errors: yes
+
+    - name: ARGOCD USERS | Log into ARGOCD with CLI using the initial password
+      shell: argocd login {{ ansible_host }}:{{ argocd_networking_port }} --username {{ argocd_users_admin_username }} --password {{ argocd_users_admin_pwd_initial.stdout }} --insecure
+      when: login_with_new_password is failed
 
     - name: ARGOCD USERS | Update ArgoCD Admin password
-      shell: argocd account update-password --current-password {{ argocd_users_admin_pwd_initial }} --new-password {{ argocd_users_admin_pwd_new }} --insecure
+      shell: argocd account update-password --current-password {{ argocd_users_admin_pwd_initial.stdout }} --new-password {{ argocd_users_admin_pwd_new }} --insecure
       run_once: yes
+      when: login_with_new_password is failed

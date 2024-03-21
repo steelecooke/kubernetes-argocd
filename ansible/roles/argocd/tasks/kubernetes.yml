@@ -1,13 +1,13 @@
 ---
 - run_once: yes
   block:
-    - name: ARGOCD KUBERNETES | Download Kubernetes yaml file definition
-      get_url:
-        url: https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-        dest: /tmp/argocd_install.yaml
-        owner: root
-        group: root
-        mode: 0440
+    #    - name: ARGOCD KUBERNETES | Download Kubernetes yaml file definition
+    #      get_url:
+    #        url: https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+    #        dest: /tmp/argocd_install.yaml
+    #        owner: root
+    #        group: root
+    #        mode: 0440
 
     - name: ARGOCD KUBERNETES | Manage Kubernetes objects
       k8s:
@@ -19,11 +19,10 @@
       file:
         path: /tmp/argocd_install.yaml
         state: absent
-
-- name: ARGOCD INSTALL | Download command line tool
-  get_url:
-    url: "{{ argocd_cli_url }}"
-    dest: "{{ argocd_cli_path }}"
-    owner: root
-    group: root
-    mode: 0755
+#- name: ARGOCD INSTALL | Download command line tool
+#  get_url:
+#    url: "{{ argocd_cli_url }}"
+#    dest: "{{ argocd_cli_path }}"
+#    owner: root
+#    group: root
+#    mode: 0755

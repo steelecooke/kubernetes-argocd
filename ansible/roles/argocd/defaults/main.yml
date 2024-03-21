@@ -9,11 +9,12 @@ argocd_cli_url: https://github.com/argoproj/argo-cd/releases/latest/download/arg
 argocd_cli_path: /usr/local/bin/argocd
 
 # Networking
-argocd_networking_port: 443
+argocd_networking_port: 8080
 
 # Users
 argocd_users_admin_username: admin
 argocd_users_admin_pwd_initial: ""
+argocd_users_admin_pwd_new_raw: ""
 argocd_users_admin_pwd_new: ""
 argocd_users_admin_remote_name: "argocd-dev-argocd-admin-password"
 
@@ -22,9 +23,7 @@ argocd_aws_region: ap-southeast-2
 
 # Repositories
 argocd_repositories:
-  githttp:
-    - url: "https://git.example.com/repos/repo1"
-    - url: "https://git.example.com/repos/repo2"
+  githttp: []
   helm:
     - url: "https://prometheus-community.github.io/helm-charts"
       name: "prometheus-community"

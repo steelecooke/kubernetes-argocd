@@ -12,5 +12,7 @@
   import_tasks: repositories.yml
 
 - name: ARGOCD INSTALL | Apply Argo CD application manifests
-  shell: kubectl apply -f {{ item }}
-  loop: "{{ lookup('fileglob', 'roles/argocd/manifests/**/*.yml', wantlist=true) }}"
+  kubernetes.core.k8s:
+    src: "{{ item.root }}/{{ item.path }}"
+  loop: "{{ query('filetree', '/Users/steelecooke/Documents/Projects/argocd/ansible/roles/argocd/manifests/') }}"
+  when: item.state == 'file' and item.path.endswith('.yml')
